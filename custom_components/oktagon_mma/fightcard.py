@@ -160,3 +160,22 @@ def parse_visible_fight_card(html: str) -> list[Bout]:
         seen.add((first, second))
         bouts.append(Bout(first, second, weight))
     return bouts
+
+
+def find_event_page_url(html: str, event_title: str) -> str | None:
+    """Find an official detail URL by the event number, never by guesswork."""
+    import re
+    from html import unescape
+    from urllib.parse import urljoin, urlparse
+
+    match = re.match(r"^OKTAGON (\\d+)\\b", event_title, re.I)
+    if not match:
+        return None
+    number = match.group(1)
+    for href in re.findall(r'href\\s*=\\s*["\\']([^"\\']+)["\\']', html, re.I):
+        url = urljoin("https://oktagonmma.com/", unescape(href))
+        parsed = urlparse(url)
+        if (parsed.scheme == "https" and parsed.hostname == "oktagonmma.com"
+                and re.match(rf"^/(?:en/)?events/oktagon-{number}(?:-|/)", parsed.path)):
+            return url
+    return None
