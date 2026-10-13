@@ -51,5 +51,5 @@ jobs:
           
           for event in events[:5]:
               print(event.day.isoformat(), event.title, event.venue)
-          assert events, "No live events parsed; inspect source markup before HA testing"
+          assert len(events) >= 5, f"Expected at least 5 upcoming events, parsed {len(events)}"
           PY
