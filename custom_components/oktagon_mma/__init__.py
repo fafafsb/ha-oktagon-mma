@@ -4,7 +4,7 @@ import logging
 
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, CoreState, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
@@ -12,7 +12,7 @@ from .coordinator import OktagonCoordinator
 
 PLATFORMS = ["calendar", "sensor"]
 _LOGGER = logging.getLogger(__name__)
-CARD_URL = "/oktagon_mma/oktagon-fight-card.js"
+CARD_URLS = ("/oktagon_mma/oktagon-fight-card.js", "/oktagon_mma/oktagon-event-card.js")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -37,26 +37,36 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def _async_register_card(hass: HomeAssistant) -> None:
-    """Expose bundled frontend card and register it in storage-mode Lovelace."""
-    if hass.data[DOMAIN].get("_card_registered"):
+    """Serve both cards and register Lovelace resources after startup."""
+    data = hass.data[DOMAIN]
+    if data.get("_card_registered"):
         return
-    card_file = Path(__file__).parent / "www" / "oktagon-fight-card.js"
-    await hass.http.async_register_static_paths([
-        StaticPathConfig(CARD_URL, str(card_file), cache_headers=False)
-    ])
-    hass.data[DOMAIN]["_card_registered"] = True
-    try:
-        from homeassistant.components.lovelace.const import DOMAIN as LOVELACE_DOMAIN
+    static_files = [
+        StaticPathConfig(url, str(Path(__file__).parent / "www" / url.rsplit("/", 1)[-1]), cache_headers=False)
+        for url in CARD_URLS
+    ]
+    static_files.append(StaticPathConfig("/oktagon_mma/icon.png", str(Path(__file__).parent / "brand" / "icon.png"), cache_headers=False))
+    await hass.http.async_register_static_paths(static_files)
+    data["_card_registered"] = True
 
-        lovelace = hass.data.get(LOVELACE_DOMAIN)
-        resources = getattr(lovelace, "resources", None)
-        if resources is None or not hasattr(resources, "async_create_item"):
-            _LOGGER.info("OKTAGON card available at %s; add as a Lovelace resource if using YAML mode", CARD_URL)
-            return
-        if hasattr(resources, "async_load"):
-            await resources.async_load()
-        existing = getattr(resources, "async_items", lambda: [])()
-        if not any(item.get("url", "").split("?")[0] == CARD_URL for item in existing):
-            await resources.async_create_item({"res_type": "module", "url": CARD_URL})
-    except Exception:
-        _LOGGER.exception("Could not automatically register OKTAGON dashboard resource")
+    async def register_resources(_event=None):
+        try:
+            from homeassistant.components.lovelace.const import DOMAIN as LOVELACE_DOMAIN
+            lovelace = hass.data.get(LOVELACE_DOMAIN)
+            resources = getattr(lovelace, "resources", None)
+            if resources is None or not hasattr(resources, "async_create_item"):
+                _LOGGER.warning("OKTAGON Lovelace resources unavailable; add card URLs manually")
+                return
+            if hasattr(resources, "async_load"):
+                await resources.async_load()
+            existing = getattr(resources, "async_items", lambda: [])()
+            for url in CARD_URLS:
+                if not any(item.get("url", "").split("?")[0] == url for item in existing):
+                    await resources.async_create_item({"res_type": "module", "url": url})
+        except Exception:
+            _LOGGER.exception("Could not automatically register OKTAGON dashboard resources")
+
+    if hass.state == CoreState.running:
+        await register_resources()
+    else:
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, register_resources)
