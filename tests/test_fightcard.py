@@ -70,3 +70,34 @@ def test_embedded_next_data_fights():
     assert [(b.fighter_one, b.fighter_two) for b in parse_embedded_fight_card(html)] == [
         ("Patrik Kincl", "Dominik Humburger")
     ]
+
+def test_embedded_portraits_prefer_fightcard_and_fallback_profile():
+    import json
+    fight = {
+        "fighter1": {"firstName": "Patrik", "lastName": "Kincl",
+            "imageFightCard": {"url": {"cs": "https://assets.oktagonmma.com/fight.png"}},
+            "imageProfile": {"url": {"cs": "https://assets.oktagonmma.com/profile.png"}}},
+        "fighter2": {"firstName": "Dominik", "lastName": "Humburger",
+            "imageProfile": {"url": {"cs": "https://assets.oktagonmma.com/dominik.png"}}},
+        "weightClass": {"title": "Middleweight"},
+    }
+    html = '<script id="__NEXT_DATA__" type="application/json">' + json.dumps(
+        {"props": {"pageProps": {"fights": [fight]}}}
+    ) + '</script>'
+    bout = parse_embedded_fight_card(html)[0]
+    assert bout.weight_class == "Middleweight"
+    assert bout.fighter_one_image == "https://assets.oktagonmma.com/fight.png"
+    assert bout.fighter_two_image == "https://assets.oktagonmma.com/dominik.png"
+
+
+def test_embedded_portrait_rejects_external_image_host():
+    import json
+    fight = {"fighter1": {"firstName": "A", "lastName": "B",
+             "imageProfile": {"url": {"cs": "https://example.com/untrusted.png"}}},
+             "fighter2": {"firstName": "C", "lastName": "D"}}
+    html = '<script id="__NEXT_DATA__" type="application/json">' + json.dumps(
+        {"props": {"pageProps": {"fights": [fight]}}}
+    ) + '</script>'
+    bout = parse_embedded_fight_card(html)[0]
+    assert bout.fighter_one_image is None
+    assert bout.fighter_two_image is None
