@@ -101,13 +101,13 @@ class _VisibleText(HTMLParser):
         if tag in ("script", "style"):
             self.hidden += 1
         elif tag in ("h1", "h2", "h3", "h4", "h5", "p", "div", "section", "br", "li"):
-            self.parts.append("\\n")
+            self.parts.append("\n")
 
     def handle_endtag(self, tag):
         if tag in ("script", "style"):
             self.hidden = max(0, self.hidden - 1)
         elif tag in ("h1", "h2", "h3", "h4", "h5", "p", "div", "section", "li"):
-            self.parts.append("\\n")
+            self.parts.append("\n")
 
     def handle_data(self, data):
         if not self.hidden:
@@ -124,7 +124,7 @@ def parse_visible_fight_card(html: str) -> list[Bout]:
 
     parser = _VisibleText()
     parser.feed(html)
-    lines = [re.sub(r"\\s+", " ", line).strip() for line in "".join(parser.parts).splitlines()]
+    lines = [re.sub(r"\s+", " ", line).strip() for line in "".join(parser.parts).splitlines()]
     lines = [line for line in lines if line]
     try:
         start = next(i for i, value in enumerate(lines) if value.upper() == "MAIN CARD")
