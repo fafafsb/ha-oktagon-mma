@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "custom_components" / "oktagon_mma"))
-from fightcard import parse_fight_card, parse_visible_fight_card, find_event_page_url
+from fightcard import parse_fight_card, parse_visible_fight_card, find_event_page_url, parse_embedded_fight_card
 
 
 def test_extracts_only_explicit_competitors():
@@ -59,3 +59,14 @@ def test_official_overview_links_to_oktagon_tv():
 def test_do_not_accept_untrusted_event_domain():
     html = '<a href="https://fake.example/event/oktagon-95/">Event</a>'
     assert find_event_page_url(html, "OKTAGON 95: KINCL VS. HUMBURGER") is None
+
+
+def test_embedded_next_data_fights():
+    html = """<script id="__NEXT_DATA__" type="application/json">
+    {"props":{"pageProps":{"dehydratedState":{"queries":[{"state":{"data":[
+    {"title":{"cs":"MAIN CARD"},"fights":[{"fighter1":{"firstName":"Patrik","lastName":"Kincl"},
+    "fighter2":{"firstName":"Dominik","lastName":"Humburger"}}]}]}}]}}}}
+    </script>"""
+    assert [(b.fighter_one, b.fighter_two) for b in parse_embedded_fight_card(html)] == [
+        ("Patrik Kincl", "Dominik Humburger")
+    ]
