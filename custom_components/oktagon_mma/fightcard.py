@@ -190,3 +190,72 @@ def find_event_page_url(html: str, event_title: str) -> str | None:
             if re.fullmatch(rf"/event/oktagon-{number}/?", parsed.path, re.I):
                 candidates.append((1, url))
     return min(candidates)[1] if candidates else None
+
+
+class _NextData(HTMLParser):
+    """Read Next.js server-side JSON without executing scripts."""
+
+    def __init__(self):
+        super().__init__()
+        self.collect = False
+        self.parts = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "script" and dict(attrs).get("id") == "__NEXT_DATA__":
+            self.collect = True
+
+    def handle_data(self, data):
+        if self.collect:
+            self.parts.append(data)
+
+    def handle_endtag(self, tag):
+        if tag == "script":
+            self.collect = False
+
+
+def parse_embedded_fight_card(html: str) -> list[Bout]:
+    """Extract explicit fighter pairs from the official Next.js event payload."""
+    parser = _NextData()
+    parser.feed(html)
+    if not parser.parts:
+        return []
+    try:
+        payload = json.loads("".join(parser.parts))
+    except (ValueError, TypeError):
+        return []
+    bouts = []
+    seen = set()
+
+    def visit(value):
+        if isinstance(value, dict):
+            fights = value.get("fights")
+            if isinstance(fights, list):
+                for fight in fights:
+                    if not isinstance(fight, dict):
+                        continue
+                    left, right = fight.get("fighter1"), fight.get("fighter2")
+                    if not isinstance(left, dict) or not isinstance(right, dict):
+                        continue
+                    def fighter_name(fighter):
+                        return " ".join(str(fighter.get(k) or "").strip()
+                                        for k in ("firstName", "lastName")).strip()
+                    first, second = fighter_name(left), fighter_name(right)
+                    if not first or not second or first == second:
+                        continue
+                    key = (first, second)
+                    if key not in seen:
+                        seen.add(key)
+                        weight = fight.get("weightClass")
+                        if isinstance(weight, dict):
+                            weight = weight.get("name")
+                        if not isinstance(weight, str):
+                            weight = None
+                        bouts.append(Bout(first, second, weight))
+            for child in value.values():
+                visit(child)
+        elif isinstance(value, list):
+            for child in value:
+                visit(child)
+
+    visit(payload.get("props", {}).get("pageProps", {}))
+    return bouts
