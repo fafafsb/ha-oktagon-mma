@@ -1,46 +1,116 @@
-# OKTAGON MMA for Home Assistant
+<div align="center">
 
-Unofficial community integration for upcoming OKTAGON MMA events. Not affiliated with OKTAGON MMA.
+<img src="custom_components/oktagon_mma/brand/logo.png" alt="OKTAGON MMA" width="140">
 
-## Current development version: 0.3.2 (pre-release candidate)
+# 🥊 OKTAGON MMA for Home Assistant
 
-- Upcoming event calendar
-- Next event title, date, venue, and days-until countdown sensors
-- Event overview link in the next-event sensor attributes
-- Countdown sensor refresh at local midnight
-- German and English setup-flow translations
-- Optional black-and-yellow event dashboard: [dashboard-premium.yaml](examples/dashboard-premium.yaml) (requires HACS button-card)
-- New dynamic fight card dashboard: [dashboard-fight-card.yaml](examples/dashboard-fight-card.yaml) (requires HACS button-card)
-- Fight card sensor with fighter pairings, weight classes and main-event flag
+**Upcoming events, countdowns and official fight cards — right in your Home Assistant dashboard.**
 
-The public event source is scraped from the official event overview; page changes can break the parser. Event dates are currently **all-day**, not confirmed fight start times. Fight card data is parsed from official event pages; alerts and live results are **not yet implemented**.
+[![HACS](https://img.shields.io/badge/HACS-Custom%20Integration-41BDF5?logo=homeassistant&logoColor=white)](https://hacs.xyz/)
+[![GitHub release](https://img.shields.io/github/v/release/fafafsb/ha-oktagon-mma?include_prereleases&label=release)](https://github.com/fafafsb/ha-oktagon-mma/releases)
+[![Validation](https://github.com/fafafsb/ha-oktagon-mma/actions/workflows/validate.yml/badge.svg)](https://github.com/fafafsb/ha-oktagon-mma/actions)
 
-## Install with HACS
+**Two native dashboard cards. No extra frontend plugins. No YAML required to add the cards.**
 
-1. HACS > three-dot menu > Custom repositories.
-2. Add `https://github.com/fafafsb/ha-oktagon-mma` as **Integration**.
-3. Download OKTAGON MMA, restart Home Assistant.
-4. Settings > Devices & services > Add integration > OKTAGON MMA.
+</div>
 
-## Updates and releases
+---
 
-The development `manifest.json` version is `0.3.2`. Until a GitHub release/tag is published, HACS may show abbreviated commit hashes instead of semantic versions. Do not assume the manifest version creates a release automatically.
+## ✨ Features
 
-## Testing
+| Feature | Description |
+| --- | --- |
+| 🏆 Next event | Event title, date and venue |
+| ⏳ Countdown | Days remaining, updated at local midnight |
+| 🗓️ Calendar | Upcoming OKTAGON events in Home Assistant |
+| 🥊 Fight card | Fighter matchups, weight classes and official fighter images when available |
+| ⭐ Main event | Large highlighted main event |
+| 👆 Expand / collapse | Keep the main event visible and show the other bouts on demand |
+| 🎨 Native dashboard cards | Select both cards from **Add card** in the dashboard |
+| 🔄 Automatic updates | Event and fight data fetched from publicly available official event pages |
 
-GitHub Actions validates JSON, Python syntax, parser unit tests, and runs a live website smoke test. A green smoke test only confirms that at least five events are parsed; it does not validate every event or the HA runtime.
+## 📸 Dashboard previews
 
-## Disclaimer
+### OKTAGON Event Card
 
-This is an unofficial, community-developed Home Assistant integration. This project is not affiliated with, endorsed by, sponsored by, or officially connected to OKTAGON MMA.
+A compact black-and-yellow event overview with countdown, full date (DD.MM.YYYY) and location.
 
-All trademarks, names, logos, and fighter images belong to their respective owners. Event and fighter information is retrieved from publicly available OKTAGON MMA sources. This disclaimer does not grant rights to redistribute third-party images or trademarks.
+![OKTAGON Event Card](docs/screenshots/event-card.png)
 
-## Dynamic fight card dashboard (0.3.2 beta)
+### OKTAGON Fight Card
 
-1. Install **button-card** from HACS > Frontend if not already installed.
-2. Open [examples/dashboard-fight-card.yaml](examples/dashboard-fight-card.yaml) and copy its contents.
-3. In your Home Assistant dashboard select **Edit > Add card > Manual** and paste the YAML.
-4. If your entity ID differs, replace `sensor.next_oktagon_fight_card` in both `entity` and `triggers_update`.
+The next event's main fight is always in focus, with fighter portraits and a button to reveal the remaining bouts.
 
-The card automatically renders all bouts from the sensor's `fights` attribute. Tap the card to open the sensor details. This dashboard is a YAML example and is not automatically added to your dashboard when you install the integration.
+![OKTAGON Fight Card – collapsed](docs/screenshots/fight-card.png)
+
+<details>
+<summary>Show expanded fight card preview</summary>
+
+![OKTAGON Fight Card – expanded](docs/screenshots/fight-card-expanded.png)
+
+</details>
+
+## 📦 Install with HACS
+
+1. Open **HACS** in Home Assistant.
+2. Open the menu **⋮ → Custom repositories**.
+3. Add `https://github.com/fafafsb/ha-oktagon-mma` and select **Integration**.
+4. Download **OKTAGON MMA** (enable pre-releases in HACS if you want to test a beta).
+5. **Restart Home Assistant completely.**
+6. Go to **Settings → Devices & services → Add integration**, search for **OKTAGON MMA**, and complete setup.
+7. Edit a dashboard, select **Add card**, search for **OKTAGON**, and choose your card.
+
+> **No button-card, expander-card or toggle helpers required.** The integration bundles its own JavaScript cards and attempts to register them automatically. A full Home Assistant restart and browser hard refresh may be needed after installation.
+
+## 🖼️ Dashboard cards
+
+Choose either card directly in the Home Assistant card picker:
+
+- **OKTAGON Event Card** — next event, days remaining, date and venue.
+- **OKTAGON Fight Card** — official fighter portraits, XXL main event and expandable remaining fights.
+
+Advanced users can also add the cards manually:
+
+```yaml
+type: custom:oktagon-event-card
+```
+
+```yaml
+type: custom:oktagon-fight-card
+entity: sensor.next_oktagon_fight_card
+```
+
+If the cards are not listed after a full restart, check **Settings → Dashboards → Resources** for these **JavaScript module** resources:
+
+- `/oktagon_mma/oktagon-event-card.js`
+- `/oktagon_mma/oktagon-fight-card.js`
+
+Do not register JavaScript card files as stylesheets.
+
+## 📊 Entities
+
+The integration provides an upcoming-events calendar and sensors for:
+
+- Next OKTAGON event
+- Days until next event
+- Next event date
+- Next event location
+- Next OKTAGON fight card (including matchup details in its attributes)
+
+Entity IDs can vary if Home Assistant has renamed or suffixed them.
+
+## ℹ️ Data and limitations
+
+Event information and fight cards are obtained from public OKTAGON MMA pages. Event dates are **all-day calendar entries**, not confirmed start times. Fighter images and bouts depend on the official site publishing them. Website changes may temporarily interrupt parsing. Live scores, fight results and alerts are **not implemented**.
+
+## 🐛 Issues and contributions
+
+Found a bug or have an idea? [Open an issue](https://github.com/fafafsb/ha-oktagon-mma/issues). Please include your Home Assistant version, integration version and relevant logs where possible.
+
+## ⚠️ Disclaimer
+
+**Unofficial fan-made community integration.** This project is not affiliated with, sponsored by, endorsed by or officially connected to OKTAGON MMA. OKTAGON MMA trademarks, logos and fighter images belong to their respective owners.
+
+---
+
+<div align="center">Made for MMA fans who love Home Assistant. 🥊</div>
