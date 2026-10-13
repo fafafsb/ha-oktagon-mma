@@ -1,0 +1,6 @@
+# Native OKTAGON Fight Card (v0.4.0 development)
+# No button-card, expander-card, or toggle helpers needed.
+# Lovelace storage mode: resource registration is attempted automatically.
+# YAML mode: add /oktagon_mma/oktagon-fight-card.js as a JavaScript module resource.
+type: custom:oktagon-fight-card
+entity: sensor.next_oktagon_fight_card
