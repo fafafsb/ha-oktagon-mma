@@ -160,7 +160,7 @@ def parse_visible_fight_card(html: str) -> list[Bout]:
             None,
         )
         seen.add((first, second))
-        bouts.append(Bout(first, second, weight, fighter_image(left), fighter_image(right)))
+        bouts.append(Bout(first, second, weight))
     return bouts
 
 
@@ -272,7 +272,7 @@ def parse_embedded_fight_card(html: str) -> list[Bout]:
                             weight = weight.get("title") or weight.get("name")
                         if not isinstance(weight, str):
                             weight = None
-                        bouts.append(Bout(first, second, weight))
+                        bouts.append(Bout(first, second, weight, fighter_image(left), fighter_image(right)))
             for child in value.values():
                 visit(child)
         elif isinstance(value, list):
