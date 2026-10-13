@@ -247,7 +247,7 @@ def parse_embedded_fight_card(html: str) -> list[Bout]:
                         seen.add(key)
                         weight = fight.get("weightClass")
                         if isinstance(weight, dict):
-                            weight = weight.get("name")
+                            weight = weight.get("title") or weight.get("name")
                         if not isinstance(weight, str):
                             weight = None
                         bouts.append(Bout(first, second, weight))
