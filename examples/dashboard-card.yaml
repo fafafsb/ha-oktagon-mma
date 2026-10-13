@@ -1,0 +1,27 @@
+# OKTAGON MMA dashboard preview (built-in Markdown card, no extra frontend plugin).
+# Add via Dashboard > Edit > Add card > Manual.
+# Replace entity IDs if Home Assistant assigned different ones.
+type: markdown
+title: "🥊 OKTAGON MMA"
+entity_id:
+  - sensor.next_oktagon_event
+  - sensor.days_until_next_oktagon
+  - sensor.next_oktagon_date
+  - sensor.next_oktagon_location
+content: |
+  {% set title = states('sensor.next_oktagon_event') %}
+  {% set days = states('sensor.days_until_next_oktagon') %}
+  {% set venue = states('sensor.next_oktagon_location') %}
+  {% set day = states('sensor.next_oktagon_date') %}
+  {% if title not in ['unknown', 'unavailable'] %}
+  ## {{ title }}
+  **⏳ Countdown:** {{ days }} Tage
+
+  **📅 Datum:** {{ day }}
+
+  **📍 Veranstaltungsort:** {{ venue }}
+
+  [🥊 Alle OKTAGON-Events](https://oktagonmma.com/en/events/)
+  {% else %}
+  Noch keine OKTAGON-Eventdaten verfügbar.
+  {% endif %}
