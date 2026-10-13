@@ -139,6 +139,8 @@ class FightCardSensor(OktagonSensor):
                     "fighter_one": bout.fighter_one,
                     "fighter_two": bout.fighter_two,
                     "weight_class": bout.weight_class,
+                    "fighter_one_image": bout.fighter_one_image,
+                    "fighter_two_image": bout.fighter_two_image,
                     "main_event": index == 0,
                 }
                 for index, bout in enumerate(self.coordinator.fight_card)
