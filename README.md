@@ -2,7 +2,7 @@
 
 Unofficial community integration for upcoming OKTAGON MMA events. Not affiliated with OKTAGON MMA.
 
-## Current development version: 0.3.1 (pre-release candidate)
+## Current development version: 0.3.2 (pre-release candidate)
 
 - Upcoming event calendar
 - Next event title, date, venue, and days-until countdown sensors
@@ -24,7 +24,7 @@ The public event source is scraped from the official event overview; page change
 
 ## Updates and releases
 
-The development `manifest.json` version is `0.3.1`. Until a GitHub release/tag is published, HACS may show abbreviated commit hashes instead of semantic versions. Do not assume the manifest version creates a release automatically.
+The development `manifest.json` version is `0.3.2`. Until a GitHub release/tag is published, HACS may show abbreviated commit hashes instead of semantic versions. Do not assume the manifest version creates a release automatically.
 
 ## Testing
 
@@ -32,9 +32,11 @@ GitHub Actions validates JSON, Python syntax, parser unit tests, and runs a live
 
 ## Disclaimer
 
-This is a fan-made, unofficial integration. Logos and trademarks belong to their respective owners.
+This is an unofficial, community-developed Home Assistant integration. This project is not affiliated with, endorsed by, sponsored by, or officially connected to OKTAGON MMA.
 
-## Dynamic fight card dashboard (0.3.1 beta)
+All trademarks, names, logos, and fighter images belong to their respective owners. Event and fighter information is retrieved from publicly available OKTAGON MMA sources. This disclaimer does not grant rights to redistribute third-party images or trademarks.
+
+## Dynamic fight card dashboard (0.3.2 beta)
 
 1. Install **button-card** from HACS > Frontend if not already installed.
 2. Open [examples/dashboard-fight-card.yaml](examples/dashboard-fight-card.yaml) and copy its contents.
