@@ -53,3 +53,145 @@ jobs:
               print(event.day.isoformat(), event.title, event.venue)
           assert len(events) >= 5, f"Expected at least 5 upcoming events, parsed {len(events)}"
           PY
+
+      - name: Diagnose live next-event fight card
+        run: |
+          python - <<'PY'
+          import sys
+          import urllib.request
+          from pathlib import Path
+
+          sys.path.insert(0, str(Path("custom_components/oktagon_mma").resolve()))
+          from events import EVENTS_URL, parse_events
+          from fightcard import find_event_page_url, parse_visible_fight_card, parse_fight_card
+
+          def get(url):
+              request = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+              with urllib.request.urlopen(request, timeout=25) as response:
+                  return response.read().decode("utf-8", errors="replace")
+
+          overview = get(EVENTS_URL)
+          events = parse_events(overview)
+          url = find_event_page_url(overview, events[0].title)
+          print("Next event:", events[0].title)
+          print("Official detail URL:", url)
+          if url is None:
+              import re
+              from html import unescape
+              links = re.findall(r"""href\s*=\s*["\x27]([^"\x27]+)["\x27]""", overview, re.I)
+              candidates = [unescape(link) for link in links if "95" in link or "oktagon" in link.lower()]
+              print("Candidate detail links:", candidates[:35])
+              print("No matching detail link found; fight card not yet available")
+          else:
+              detail = get(url)
+              visible = parse_visible_fight_card(detail)
+              structured = parse_fight_card(detail)
+              print("Visible main-card fights:", len(visible))
+              print("Structured-data fights:", len(structured))
+              for bout in visible[:15]:
+                  print("BOUT:", bout.fighter_one, "vs", bout.fighter_two, "weight:", bout.weight_class)
+          PY
+
+      - name: Inspect user-confirmed OKTAGON 95 fight card page
+        run: |
+          python - <<'PY'
+          import sys
+          import re
+          import urllib.request
+          from pathlib import Path
+          sys.path.insert(0, str(Path("custom_components/oktagon_mma").resolve()))
+          from fightcard import parse_visible_fight_card, parse_fight_card, _VisibleText
+          url = "https://oktagonmma.com/de/events/oktagon-95-karlovy-vary/"
+          req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+          with urllib.request.urlopen(req, timeout=25) as response:
+              html = response.read().decode("utf-8", errors="replace")
+          print("Page length:", len(html))
+          p = _VisibleText()
+          p.feed(html)
+          lines = [re.sub(r"\\s+", " ", x).strip() for x in "".join(p.parts).splitlines()]
+          lines = [x for x in lines if x]
+          for i, line in enumerate(lines):
+              if any(token in line.lower() for token in ("main card", "fight card", "fightcard", "vorkämpfe", "kincl", "humburger")):
+                  print("SECTION", i, repr(lines[max(0,i-5):i+35]))
+                  if i > 5000:
+                      break
+          print("Visible fights:", parse_visible_fight_card(html))
+          print("Structured fights:", parse_fight_card(html))
+          PY
+
+      - name: Inspect embedded fight card payload without guessing bouts
+        run: |
+          python - <<'PY'
+          import re
+          import urllib.request
+          from html import unescape
+          url = "https://oktagonmma.com/de/events/oktagon-95-karlovy-vary/"
+          req = urllib.request.Request(url, headers={"User-Agent":"Mozilla/5.0"})
+          with urllib.request.urlopen(req, timeout=25) as r:
+              page = r.read().decode("utf-8", errors="replace")
+          for term in ("Kincl", "Humburger", "fightCard", "fightcard", "mainCard", "MAIN CARD", "VS", "__next_f", "application/json"):
+              matches = list(re.finditer(re.escape(term), page, re.I))
+              print("TERM", term, "COUNT", len(matches))
+              for m in matches[:2]:
+                  print("CONTEXT", repr(unescape(page[max(0,m.start()-160):m.end()+260])))
+          overview_req = urllib.request.Request("https://oktagonmma.com/en/events/", headers={"User-Agent":"Mozilla/5.0"})
+          with urllib.request.urlopen(overview_req, timeout=25) as r:
+              overview = r.read().decode("utf-8", errors="replace")
+          for term in ("oktagon-95-karlovy-vary", "oktagon-95", "/de/events/"):
+              print("OVERVIEW", term, "COUNT", len(list(re.finditer(re.escape(term), overview, re.I))))
+          PY
+
+      - name: Verify actual embedded fights on official page
+        run: |
+          python - <<'PY'
+          import sys
+          import urllib.request
+          from pathlib import Path
+          sys.path.insert(0, str(Path("custom_components/oktagon_mma").resolve()))
+          from fightcard import parse_embedded_fight_card
+          url = "https://oktagonmma.com/de/events/oktagon-95-karlovy-vary/"
+          req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+          with urllib.request.urlopen(req, timeout=25) as response:
+              html = response.read().decode("utf-8", errors="replace")
+          bouts = parse_embedded_fight_card(html)
+          print("Embedded fights found:", len(bouts))
+          for bout in bouts:
+              print("MATCH", bout.fighter_one, "vs", bout.fighter_two, bout.weight_class)
+          assert len(bouts) >= 2, "Embedded fight-card parser found fewer than two bouts"
+          PY
+
+      - name: Inspect official weight class fields and verify event URL resolution
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          import sys
+          import urllib.request
+          from html.parser import HTMLParser
+          from pathlib import Path
+          sys.path.insert(0, str(Path("custom_components/oktagon_mma").resolve()))
+          from fightcard import _NextData, parse_embedded_fight_card
+          req = urllib.request.Request("https://oktagonmma.com/de/events/oktagon-95-karlovy-vary/", headers={"User-Agent":"Mozilla/5.0"})
+          with urllib.request.urlopen(req, timeout=25) as response:
+              html = response.read().decode("utf-8", errors="replace")
+          parser = _NextData()
+          parser.feed(html)
+          payload = json.loads("".join(parser.parts))
+          found = []
+          def walk(obj):
+              if isinstance(obj, dict):
+                  if isinstance(obj.get("fights"), list):
+                      for fight in obj["fights"]:
+                          if isinstance(fight, dict) and isinstance(fight.get("fighter1"), dict):
+                              found.append(fight)
+                  for value in obj.values():
+                      walk(value)
+              elif isinstance(obj, list):
+                  for value in obj:
+                      walk(value)
+          walk(payload["props"]["pageProps"])
+          print("Sample fight field names:", list(found[0]) if found else [])
+          for fight in found[:2]:
+              print("Fight weight-related fields:", {k: str(v)[:500] for k,v in fight.items() if any(s in k.lower() for s in ("weight", "category", "division", "class", "limit"))})
+          print("Card section fields:", [(k, str(v)[:200]) for k,v in payload["props"]["pageProps"].items() if "fight" in k.lower()])
+          PY
