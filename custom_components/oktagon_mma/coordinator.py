@@ -6,6 +6,7 @@ from aiohttp import ClientError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .events import EVENTS_URL, OktagonEvent, parse_events
+from .fightcard import Bout, find_event_page_url, parse_visible_fight_card
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,6 +15,8 @@ class OktagonCoordinator(DataUpdateCoordinator[list[OktagonEvent]]):
     """Refresh the event overview every six hours."""
 
     def __init__(self, hass):
+        self.fight_card: list[Bout] = []
+        self.fight_card_url: str | None = None
         super().__init__(
             hass,
             _LOGGER,
@@ -36,4 +39,16 @@ class OktagonCoordinator(DataUpdateCoordinator[list[OktagonEvent]]):
         if not events:
             # Never silently present a parsing failure as "no upcoming events".
             raise UpdateFailed("No events parsed; source format may have changed")
+        # The fight card is optional. A missing/changed event detail page must
+        # never take down the existing calendar or event sensors.
+        self.fight_card = []
+        self.fight_card_url = find_event_page_url(html, events[0].title)
+        if self.fight_card_url:
+            try:
+                async with session.get(self.fight_card_url, timeout=20) as detail_response:
+                    detail_response.raise_for_status()
+                    detail_html = await detail_response.text()
+                self.fight_card = parse_visible_fight_card(detail_html)
+            except (ClientError, TimeoutError) as err:
+                _LOGGER.warning("Fight card temporarily unavailable: %s", err)
         return events
