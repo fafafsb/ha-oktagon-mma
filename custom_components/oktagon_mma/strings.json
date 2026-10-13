@@ -1,7 +1,13 @@
 {
   "config": {
+    "step": {
+      "user": {
+        "title": "OKTAGON MMA",
+        "description": "Add the upcoming OKTAGON events calendar and next-event sensor. No account or API key is required."
+      }
+    },
     "abort": {
-      "not_implemented": "This integration is still under development."
+      "already_configured": "OKTAGON MMA is already configured."
     }
   }
 }
