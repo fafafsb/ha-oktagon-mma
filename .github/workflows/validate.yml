@@ -118,3 +118,25 @@ jobs:
           print("Visible fights:", parse_visible_fight_card(html))
           print("Structured fights:", parse_fight_card(html))
           PY
+
+      - name: Inspect embedded fight card payload without guessing bouts
+        run: |
+          python - <<'PY'
+          import re
+          import urllib.request
+          from html import unescape
+          url = "https://oktagonmma.com/de/events/oktagon-95-karlovy-vary/"
+          req = urllib.request.Request(url, headers={"User-Agent":"Mozilla/5.0"})
+          with urllib.request.urlopen(req, timeout=25) as r:
+              page = r.read().decode("utf-8", errors="replace")
+          for term in ("Kincl", "Humburger", "fightCard", "fightcard", "mainCard", "MAIN CARD", "VS", "__next_f", "application/json"):
+              matches = list(re.finditer(re.escape(term), page, re.I))
+              print("TERM", term, "COUNT", len(matches))
+              for m in matches[:2]:
+                  print("CONTEXT", repr(unescape(page[max(0,m.start()-160):m.end()+260])))
+          overview_req = urllib.request.Request("https://oktagonmma.com/en/events/", headers={"User-Agent":"Mozilla/5.0"})
+          with urllib.request.urlopen(overview_req, timeout=25) as r:
+              overview = r.read().decode("utf-8", errors="replace")
+          for term in ("oktagon-95-karlovy-vary", "oktagon-95", "/de/events/"):
+              print("OVERVIEW", term, "COUNT", len(list(re.finditer(re.escape(term), overview, re.I))))
+          PY
