@@ -1,0 +1,78 @@
+# OKTAGON MMA – black/yellow dashboard card
+# Requirement: "button-card" installed from HACS > Frontend.
+# Add dashboard card > Manual and paste this complete YAML.
+# Check entity IDs under Settings > Devices & services > Entities.
+type: custom:button-card
+entity: sensor.next_oktagon_event
+show_icon: false
+show_name: false
+show_state: false
+tap_action:
+  action: more-info
+triggers_update:
+  - sensor.days_until_next_oktagon
+  - sensor.next_oktagon_date
+  - sensor.next_oktagon_location
+styles:
+  card:
+    - background: "linear-gradient(145deg, #171717, #080808)"
+    - border: "1px solid #38342a"
+    - border-radius: 22px
+    - padding: 22px
+    - color: "#ffffff"
+    - box-shadow: "0 10px 30px rgba(0,0,0,.28)"
+  grid:
+    - grid-template-areas: '"brand heading" "divider divider" "stats stats" "footer footer"'
+    - grid-template-columns: 76px 1fr
+    - grid-template-rows: auto 1px auto auto
+    - column-gap: 16px
+    - row-gap: 20px
+  custom_fields:
+    brand:
+      - align-self: center
+      - justify-self: center
+    heading:
+      - text-align: left
+      - align-self: center
+      - min-width: 0
+    divider:
+      - background: "#343434"
+      - height: 1px
+      - width: 100%
+    stats:
+      - width: 100%
+    footer:
+      - width: 100%
+custom_fields:
+  brand: |
+    [[[
+      return '<img src="https://raw.githubusercontent.com/fafafsb/ha-oktagon-mma/main/custom_components/oktagon_mma/brand/icon.png" alt="OKTAGON MMA" style="width:72px;height:72px;object-fit:contain;border-radius:12px">';
+    ]]]
+  heading: |
+    [[[
+      const title = states['sensor.next_oktagon_event']?.state ?? 'Keine Daten';
+      const match = title.match(/^(OKTAGON\s+\d+)(?:\s*:\s*(.*))?$/i);
+      const eventName = match ? match[1] : title;
+      const fight = match ? (match[2] || 'Nächstes Event') : 'Nächstes Event';
+      return '<div style="font-size:11px;color:#a9a9a9;letter-spacing:1.5px;font-weight:700">NÄCHSTES EVENT</div>' +
+        '<div style="font-size:25px;font-weight:850;margin:6px 0 3px;line-height:1.1;white-space:normal">' + eventName.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</div>' +
+        '<div style="font-size:13px;font-weight:750;color:#ffcf22;white-space:normal;line-height:1.3">' + fight.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</div>';
+    ]]]
+  divider: |
+    [[[ return ''; ]]]
+  stats: |
+    [[[
+      const days = states['sensor.days_until_next_oktagon']?.state ?? '–';
+      const dateRaw = states['sensor.next_oktagon_date']?.state ?? '';
+      const venue = states['sensor.next_oktagon_location']?.state ?? '–';
+      const valid = /^\d{4}-\d{2}-\d{2}$/.test(dateRaw);
+      const displayDate = valid ? dateRaw.slice(8,10) + '.' + dateRaw.slice(5,7) + '.' : '–';
+      const escape = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const cell = (label,value,sub) => '<div style="min-width:0"><div style="font-size:10px;color:#aaa;letter-spacing:1px;font-weight:700;margin-bottom:7px">' + label + '</div><div style="font-size:23px;font-weight:850;color:#ffcf22;line-height:1.2;overflow-wrap:anywhere">' + escape(value) + '</div><div style="font-size:11px;color:#aaa;margin-top:5px">' + sub + '</div></div>';
+      return '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;text-align:left">' +
+        cell('COUNTDOWN',days,'Tage') + cell('DATUM',displayDate,'Nächstes Event') + cell('ORT',venue,'Veranstaltungsort') + '</div>';
+    ]]]
+  footer: |
+    [[[
+      return '<div style="padding-top:12px;border-top:1px solid #343434;font-size:11px;color:#9b9b9b;text-align:left">🥊 OKTAGON MMA · Automatisch aktualisiert</div>';
+    ]]]
