@@ -1,11 +1,18 @@
 {
   "domain": "oktagon_mma",
   "name": "OKTAGON MMA",
-  "version": "0.4.1b1",
+  "version": "0.4.2b1",
   "documentation": "https://github.com/fafafsb/ha-oktagon-mma",
   "issue_tracker": "https://github.com/fafafsb/ha-oktagon-mma/issues",
   "codeowners": [],
   "config_flow": true,
   "iot_class": "cloud_polling",
-  "requirements": []
+  "requirements": [],
+  "dependencies": [
+    "http",
+    "frontend"
+  ],
+  "after_dependencies": [
+    "lovelace"
+  ]
 }
