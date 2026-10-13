@@ -62,7 +62,7 @@ def parse_events(html: str, today: date | None = None) -> list[OktagonEvent]:
     seen: set[tuple[str, date]] = set()
 
     for index, title in enumerate(lines):
-        if not re.match(r"^(?:OKTAGON (?:\\d+\\b|INFINITY\\b)|TIPSPORT CAGE GAME\\b)", title, re.I):
+        if not re.match(r"^(?:OKTAGON (?:\d+\b|INFINITY\b)|TIPSPORT CAGE GAME\b)", title, re.I):
             continue
         if len(title) > 120 or _DATE.search(title):
             continue
