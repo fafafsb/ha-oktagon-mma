@@ -18,15 +18,15 @@ styles:
     - background: "linear-gradient(145deg, #171717, #080808)"
     - border: "1px solid #38342a"
     - border-radius: 22px
-    - padding: 22px
+    - padding: 18px
     - color: "#ffffff"
     - box-shadow: "0 10px 30px rgba(0,0,0,.28)"
   grid:
     - grid-template-areas: '"brand heading" "divider divider" "stats stats" "footer footer"'
-    - grid-template-columns: 76px 1fr
+    - grid-template-columns: 72px minmax(0,1fr)
     - grid-template-rows: auto 1px auto auto
-    - column-gap: 16px
-    - row-gap: 20px
+    - column-gap: 12px
+    - row-gap: 16px
   custom_fields:
     brand:
       - align-self: center
@@ -46,7 +46,7 @@ styles:
 custom_fields:
   brand: |
     [[[
-      return '<img src="https://raw.githubusercontent.com/fafafsb/ha-oktagon-mma/main/custom_components/oktagon_mma/brand/icon.png" alt="OKTAGON MMA" style="width:72px;height:72px;object-fit:contain;border-radius:12px">';
+      return '<img src="https://raw.githubusercontent.com/fafafsb/ha-oktagon-mma/main/custom_components/oktagon_mma/brand/icon.png" alt="OKTAGON MMA" style="width:64px;height:64px;object-fit:contain;border-radius:12px">';
     ]]]
   heading: |
     [[[
@@ -68,9 +68,16 @@ custom_fields:
       const valid = /^\d{4}-\d{2}-\d{2}$/.test(dateRaw);
       const displayDate = valid ? dateRaw.slice(8,10) + '.' + dateRaw.slice(5,7) + '.' : '–';
       const escape = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const cell = (label,value,sub) => '<div style="min-width:0"><div style="font-size:10px;color:#aaa;letter-spacing:1px;font-weight:700;margin-bottom:7px">' + label + '</div><div style="font-size:23px;font-weight:850;color:#ffcf22;line-height:1.2;overflow-wrap:anywhere">' + escape(value) + '</div><div style="font-size:11px;color:#aaa;margin-top:5px">' + sub + '</div></div>';
-      return '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;text-align:left">' +
-        cell('COUNTDOWN',days,'Tage') + cell('DATUM',displayDate,'Nächstes Event') + cell('ORT',venue,'Veranstaltungsort') + '</div>';
+      const cell = (label,value,sub,large=false) =>
+        '<div style="min-width:0;max-width:100%;' +
+        (large ? 'grid-column:1/-1;padding-top:12px;border-top:1px solid #343434;' : '') +
+        '"><div style="font-size:10px;color:#aaa;letter-spacing:1px;font-weight:700;margin-bottom:7px">' + label +
+        '</div><div style="font-size:' + (large ? '17px' : '24px') +
+        ';font-weight:850;color:#ffcf22;line-height:1.3;white-space:normal;overflow-wrap:anywhere;word-break:break-word">' +
+        escape(value) + '</div><div style="font-size:11px;color:#aaa;margin-top:5px">' + sub + '</div></div>';
+      return '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 12px;text-align:left;min-width:0;width:100%">' +
+        cell('COUNTDOWN',days,'Tage') + cell('DATUM',displayDate,'Nächstes Event') +
+        cell('ORT',venue,'Veranstaltungsort',true) + '</div>';
     ]]]
   footer: |
     [[[
