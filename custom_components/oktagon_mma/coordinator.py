@@ -45,7 +45,7 @@ class OktagonCoordinator(DataUpdateCoordinator[list[OktagonEvent]]):
         self.fight_card_url = find_event_page_url(html, events[0].title)
         if events[0].title.upper().startswith('OKTAGON '):
             import re
-            match = re.match(r'^OKTAGON ([0-9]+)\\b', events[0].title, re.I)
+            match = re.match(r'^OKTAGON ([0-9]+)\b', events[0].title, re.I)
             if match:
                 number = match.group(1)
                 # The overview contains the official slug as part of its Next.js data.
