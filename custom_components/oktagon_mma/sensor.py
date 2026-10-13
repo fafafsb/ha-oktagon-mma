@@ -115,6 +115,37 @@ class EventLocationSensor(OktagonSensor):
         return event.venue if event else None
 
 
+class FightCardSensor(OktagonSensor):
+    """Number of confirmed matchups for the next event."""
+
+    _attr_name = "Next OKTAGON fight card"
+    _attr_icon = "mdi:boxing-glove"
+    _attr_native_unit_of_measurement = "fights"
+
+    def __init__(self, coordinator, entry):
+        super().__init__(coordinator, entry, "fight_card")
+
+    @property
+    def native_value(self):
+        return len(self.coordinator.fight_card) if self.coordinator.fight_card_url else None
+
+    @property
+    def extra_state_attributes(self):
+        return {
+            "event": self.next_event.title if self.next_event else None,
+            "event_url": self.coordinator.fight_card_url,
+            "fights": [
+                {
+                    "fighter_one": bout.fighter_one,
+                    "fighter_two": bout.fighter_two,
+                    "weight_class": bout.weight_class,
+                    "main_event": index == 0,
+                }
+                for index, bout in enumerate(self.coordinator.fight_card)
+            ],
+        }
+
+
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the sensors from the shared coordinator."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -124,5 +155,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
             CountdownSensor(coordinator, entry),
             EventDateSensor(coordinator, entry),
             EventLocationSensor(coordinator, entry),
+            FightCardSensor(coordinator, entry),
         ]
     )
