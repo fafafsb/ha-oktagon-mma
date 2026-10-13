@@ -163,19 +163,30 @@ def parse_visible_fight_card(html: str) -> list[Bout]:
 
 
 def find_event_page_url(html: str, event_title: str) -> str | None:
-    """Find a matching official event detail URL without guessing the slug."""
+    """Find an event link explicitly present in the official overview.
+
+    Prefer a detail page on oktagonmma.com, otherwise accept the event page
+    on oktagon.tv linked by the official OKTAGON website.
+    """
     import re
     from html import unescape
     from urllib.parse import urljoin, urlparse
 
-    match = re.match(r"^OKTAGON ([0-9]+)\b", event_title, re.I)
+    match = re.match(r"^OKTAGON ([0-9]+)\\b", event_title, re.I)
     if not match:
         return None
     number = match.group(1)
-    for href in re.findall(r"""href\s*=\s*["']([^"']+)["']""", html, re.I):
+    links = re.findall(r"""href\\s*=\\s*["']([^"']+)["']""", html, re.I)
+    candidates = []
+    for href in links:
         url = urljoin("https://oktagonmma.com/", unescape(href))
         parsed = urlparse(url)
-        pattern = rf"^/(?:en/)?events/oktagon-{number}(?:-|/)"
-        if parsed.scheme == "https" and parsed.hostname == "oktagonmma.com" and re.match(pattern, parsed.path):
-            return url
-    return None
+        if parsed.scheme != "https":
+            continue
+        if parsed.hostname in ("oktagonmma.com", "www.oktagonmma.com"):
+            if re.search(rf"/(?:en/|de/|cs/|pl/)?events/oktagon-{number}(?:-|/|$)", parsed.path, re.I):
+                candidates.append((0, url))
+        elif parsed.hostname == "oktagon.tv":
+            if re.fullmatch(rf"/event/oktagon-{number}/?", parsed.path, re.I):
+                candidates.append((1, url))
+    return min(candidates)[1] if candidates else None
