@@ -59,7 +59,7 @@ custom_fields:
           '<div style="min-width:0">' + portrait(imgOne,'left') + '<div style="font-size:14px;font-weight:800;line-height:1.25;overflow-wrap:anywhere">' + one + '</div></div>' +
           '<div style="text-align:center;color:#ffce22;font-size:13px;font-weight:900">VS</div>' +
           '<div style="min-width:0;text-align:right">' + portrait(imgTwo,'right') + '<div style="font-size:14px;font-weight:800;line-height:1.25;overflow-wrap:anywhere">' + two + '</div></div></div></div>';
-      }).join('');
+      });
       const mainIndex = fights.findIndex(fight => fight.main_event === true);
       const featuredIndex = mainIndex >= 0 ? mainIndex : 0;
       const featured = cards[featuredIndex];
