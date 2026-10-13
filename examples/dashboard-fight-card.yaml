@@ -68,8 +68,8 @@ cards:
           const featuredIndex = mainIndex >= 0 ? mainIndex : 0;
           const others = cards.filter((_, index) => index !== featuredIndex);
           const expanded = states['input_boolean.oktagon_fight_card_expanded']?.state === 'on';
-          const selection = expanded ? others.join('') : cards[featuredIndex];
-          return header + (expanded ? '<div style="display:grid;gap:9px">' + selection + '</div>' : selection) +
+          const selection = cards[featuredIndex] + (expanded ? '<div style="display:grid;gap:9px;margin-top:10px">' + others.join('') + '</div>' : '');
+          return header + selection +
             (eventUrl ? '<div style="font-size:11px;color:#aaa;text-align:left;margin-top:14px">Quelle: ' + esc(eventUrl) + '</div>' : '');
         ]]]
   - type: custom:button-card
