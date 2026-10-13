@@ -19,6 +19,17 @@ jobs:
           for path in Path('.').rglob('*.json'):
               json.loads(path.read_text(encoding='utf-8'))
           PY
+      - name: Validate native card JavaScript syntax
+        run: |
+          node --check custom_components/oktagon_mma/www/oktagon-fight-card.js
+          node - <<'JS'
+          const fs = require('fs');
+          const source = fs.readFileSync('custom_components/oktagon_mma/www/oktagon-fight-card.js', 'utf8');
+          for (const token of ['customElements.define("oktagon-fight-card"', 'getStubConfig()', 'id="toggle"', 'this._expanded = !this._expanded']) {
+            if (!source.includes(token)) throw new Error('Missing card behavior: ' + token);
+          }
+          console.log('Native card syntax and core UI hooks OK');
+          JS
       - name: Install test runner
         run: python -m pip install pytest
       - name: Run parser tests
