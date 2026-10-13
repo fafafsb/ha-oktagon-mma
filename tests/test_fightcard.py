@@ -47,3 +47,15 @@ def test_event_link_is_taken_from_official_overview():
         "https://oktagonmma.com/en/events/oktagon-95-karlovy-vary/"
     )
     assert find_event_page_url(html, "OKTAGON 96: OTHER") is None
+
+
+def test_official_overview_links_to_oktagon_tv():
+    html = '<a href="https://oktagon.tv/event/oktagon-95/">Watch event</a>'
+    assert find_event_page_url(html, "OKTAGON 95: KINCL VS. HUMBURGER") == (
+        "https://oktagon.tv/event/oktagon-95/"
+    )
+
+
+def test_do_not_accept_untrusted_event_domain():
+    html = '<a href="https://fake.example/event/oktagon-95/">Event</a>'
+    assert find_event_page_url(html, "OKTAGON 95: KINCL VS. HUMBURGER") is None
