@@ -51,18 +51,22 @@ async def _async_register_card(hass: HomeAssistant) -> None:
 
     async def register_resources(_event=None):
         try:
-            from homeassistant.components.lovelace.const import DOMAIN as LOVELACE_DOMAIN
-            lovelace = hass.data.get(LOVELACE_DOMAIN)
+            from homeassistant.components.lovelace.const import LOVELACE_DATA, MODE_STORAGE
+            lovelace = hass.data.get(LOVELACE_DATA)
+            if lovelace is None or getattr(lovelace, "resource_mode", None) != MODE_STORAGE:
+                _LOGGER.warning("OKTAGON resource auto-registration requires Lovelace storage resource mode")
+                return
             resources = getattr(lovelace, "resources", None)
             if resources is None or not hasattr(resources, "async_create_item"):
                 _LOGGER.warning("OKTAGON Lovelace resources unavailable; add card URLs manually")
                 return
-            if hasattr(resources, "async_load"):
+            if not resources.loaded:
                 await resources.async_load()
             existing = getattr(resources, "async_items", lambda: [])()
             for url in CARD_URLS:
                 if not any(item.get("url", "").split("?")[0] == url for item in existing):
                     await resources.async_create_item({"res_type": "module", "url": url})
+                    _LOGGER.info("Registered OKTAGON Lovelace card: %s", url)
         except Exception:
             _LOGGER.exception("Could not automatically register OKTAGON dashboard resources")
 
