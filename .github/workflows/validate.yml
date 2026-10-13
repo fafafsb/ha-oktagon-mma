@@ -140,3 +140,22 @@ jobs:
           for term in ("oktagon-95-karlovy-vary", "oktagon-95", "/de/events/"):
               print("OVERVIEW", term, "COUNT", len(list(re.finditer(re.escape(term), overview, re.I))))
           PY
+
+      - name: Verify actual embedded fights on official page
+        run: |
+          python - <<'PY'
+          import sys
+          import urllib.request
+          from pathlib import Path
+          sys.path.insert(0, str(Path("custom_components/oktagon_mma").resolve()))
+          from fightcard import parse_embedded_fight_card
+          url = "https://oktagonmma.com/de/events/oktagon-95-karlovy-vary/"
+          req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+          with urllib.request.urlopen(req, timeout=25) as response:
+              html = response.read().decode("utf-8", errors="replace")
+          bouts = parse_embedded_fight_card(html)
+          print("Embedded fights found:", len(bouts))
+          for bout in bouts:
+              print("MATCH", bout.fighter_one, "vs", bout.fighter_two, bout.weight_class)
+          assert len(bouts) >= 2, "Embedded fight-card parser found fewer than two bouts"
+          PY
