@@ -76,6 +76,11 @@ jobs:
           print("Next event:", events[0].title)
           print("Official detail URL:", url)
           if url is None:
+              import re
+              from html import unescape
+              links = re.findall(r"""href\s*=\s*["\x27]([^"\x27]+)["\x27]""", overview, re.I)
+              candidates = [unescape(link) for link in links if "95" in link or "oktagon" in link.lower()]
+              print("Candidate detail links:", candidates[:35])
               print("No matching detail link found; fight card not yet available")
           else:
               detail = get(url)
