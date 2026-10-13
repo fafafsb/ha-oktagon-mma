@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="custom_components/oktagon_mma/brand/logo.png" alt="OKTAGON MMA" width="140">
+<img src="https://raw.githubusercontent.com/fafafsb/ha-oktagon-mma/main/custom_components/oktagon_mma/brand/logo.png" alt="OKTAGON MMA" width="140">
 
 # 🥊 OKTAGON MMA for Home Assistant
 
@@ -35,18 +35,18 @@
 
 A compact black-and-yellow event overview with countdown, full date (DD.MM.YYYY) and location.
 
-![OKTAGON Event Card](docs/screenshots/event-card.png)
+![OKTAGON Event Card](https://raw.githubusercontent.com/fafafsb/ha-oktagon-mma/main/docs/screenshots/event-card.png)
 
 ### OKTAGON Fight Card
 
 The next event's main fight is always in focus, with fighter portraits and a button to reveal the remaining bouts.
 
-![OKTAGON Fight Card – collapsed](docs/screenshots/fight-card.png)
+![OKTAGON Fight Card – collapsed](https://raw.githubusercontent.com/fafafsb/ha-oktagon-mma/main/docs/screenshots/fight-card.png)
 
 <details>
 <summary>Show expanded fight card preview</summary>
 
-![OKTAGON Fight Card – expanded](docs/screenshots/fight-card-expanded.png)
+![OKTAGON Fight Card – expanded](https://raw.githubusercontent.com/fafafsb/ha-oktagon-mma/main/docs/screenshots/fight-card-expanded.png)
 
 </details>
 
