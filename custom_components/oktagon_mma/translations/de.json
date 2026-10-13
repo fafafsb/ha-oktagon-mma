@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "OKTAGON MMA",
+        "description": "Füge den Kalender für kommende OKTAGON-Events und die Event-Sensoren hinzu. Kein Konto und kein API-Schlüssel erforderlich."
+      }
+    },
+    "abort": {
+      "already_configured": "OKTAGON MMA ist bereits eingerichtet."
+    }
+  }
+}
