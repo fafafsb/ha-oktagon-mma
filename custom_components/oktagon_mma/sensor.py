@@ -1,9 +1,9 @@
 """Sensors for upcoming OKTAGON MMA events."""
 
-from datetime import date
-
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.event import async_track_time_change
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .events import EVENTS_URL
@@ -46,7 +46,7 @@ class NextEventSensor(OktagonSensor):
         return {
             "date": event.day.isoformat(),
             "location": event.venue,
-            "days_until": (event.day - date.today()).days,
+            "days_until": (event.day - dt_util.now().date()).days,
             "events_url": EVENTS_URL,
         }
 
@@ -58,13 +58,30 @@ class CountdownSensor(OktagonSensor):
     _attr_icon = "mdi:timer-outline"
     _attr_native_unit_of_measurement = "d"
 
+    async def async_added_to_hass(self):
+        """Update countdown at local midnight, even without a data refresh."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_track_time_change(
+                self.hass,
+                self._handle_midnight,
+                hour=0,
+                minute=0,
+                second=0,
+            )
+        )
+
+    def _handle_midnight(self, now):
+        """Refresh the displayed number of days at midnight."""
+        self.async_write_ha_state()
+
     def __init__(self, coordinator, entry):
         super().__init__(coordinator, entry, "countdown")
 
     @property
     def native_value(self):
         event = self.next_event
-        return max(0, (event.day - date.today()).days) if event else None
+        return max(0, (event.day - dt_util.now().date()).days) if event else None
 
 
 class EventDateSensor(OktagonSensor):
