@@ -53,3 +53,36 @@ jobs:
               print(event.day.isoformat(), event.title, event.venue)
           assert len(events) >= 5, f"Expected at least 5 upcoming events, parsed {len(events)}"
           PY
+
+      - name: Diagnose live next-event fight card
+        run: |
+          python - <<'PY'
+          import sys
+          import urllib.request
+          from pathlib import Path
+
+          sys.path.insert(0, str(Path("custom_components/oktagon_mma").resolve()))
+          from events import EVENTS_URL, parse_events
+          from fightcard import find_event_page_url, parse_visible_fight_card, parse_fight_card
+
+          def get(url):
+              request = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+              with urllib.request.urlopen(request, timeout=25) as response:
+                  return response.read().decode("utf-8", errors="replace")
+
+          overview = get(EVENTS_URL)
+          events = parse_events(overview)
+          url = find_event_page_url(overview, events[0].title)
+          print("Next event:", events[0].title)
+          print("Official detail URL:", url)
+          if url is None:
+              print("No matching detail link found; fight card not yet available")
+          else:
+              detail = get(url)
+              visible = parse_visible_fight_card(detail)
+              structured = parse_fight_card(detail)
+              print("Visible main-card fights:", len(visible))
+              print("Structured-data fights:", len(structured))
+              for bout in visible[:15]:
+                  print("BOUT:", bout.fighter_one, "vs", bout.fighter_two, "weight:", bout.weight_class)
+          PY
