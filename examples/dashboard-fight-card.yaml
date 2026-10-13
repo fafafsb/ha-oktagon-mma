@@ -1,0 +1,54 @@
+# OKTAGON MMA – dynamic fight card (v0.3.1 beta)
+# Requires HACS Frontend: button-card
+# Dashboard > Edit > Add card > Manual > paste this YAML.
+# Change entity if your fight-card entity ID differs.
+type: custom:button-card
+entity: sensor.next_oktagon_fight_card
+show_icon: false
+show_name: false
+show_state: false
+tap_action:
+  action: more-info
+triggers_update:
+  - sensor.next_oktagon_fight_card
+styles:
+  card:
+    - background: "linear-gradient(145deg,#1b1b1b,#090909)"
+    - color: white
+    - border: "1px solid #48402a"
+    - border-radius: 20px
+    - padding: 18px
+    - box-shadow: "0 10px 28px rgba(0,0,0,.25)"
+  grid:
+    - grid-template-areas: '"content"'
+    - grid-template-columns: 100%
+  custom_fields:
+    content:
+      - width: 100%
+      - min-width: 0
+custom_fields:
+  content: |
+    [[[
+      const attrs = entity?.attributes ?? {};
+      const fights = Array.isArray(attrs.fights) ? attrs.fights : [];
+      const esc = value => String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      const eventName = attrs.event || 'Nächstes OKTAGON Event';
+      const eventUrl = typeof attrs.event_url === 'string' && /^https:\/\/oktagonmma\.com\//.test(attrs.event_url) ? attrs.event_url : '';
+      const header = '<div style="text-align:left;margin-bottom:17px"><div style="font-size:11px;font-weight:800;letter-spacing:2px;color:#ffce22">OKTAGON MMA · FIGHT CARD</div><div style="font-size:22px;font-weight:900;line-height:1.2;margin-top:7px;white-space:normal;overflow-wrap:anywhere">' + esc(eventName) + '</div><div style="font-size:12px;color:#aaa;margin-top:6px">' + fights.length + ' Kämpfe</div></div>';
+      if (!fights.length) return header + '<div style="text-align:left;color:#aaa;padding:18px 0;border-top:1px solid #333">Noch keine Fight Card verfügbar.</div>';
+      const cards = fights.map((fight, index) => {
+        const main = fight.main_event === true;
+        const one = esc(fight.fighter_one || 'TBA');
+        const two = esc(fight.fighter_two || 'TBA');
+        const weight = esc(fight.weight_class || 'Gewichtsklasse offen');
+        const title = main ? '★ MAIN EVENT' : 'KAMPF ' + (index + 1);
+        return '<div style="border:1px solid ' + (main ? '#b48b12' : '#343434') + ';background:' + (main ? 'linear-gradient(135deg,#2b2617,#141414)' : '#171717') + ';border-radius:14px;padding:13px 12px;text-align:left;min-width:0">' +
+          '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:10px;font-weight:800;letter-spacing:1px"><span style="color:#ffce22">' + title + '</span><span style="color:#bbb;overflow-wrap:anywhere">' + weight + '</span></div>' +
+          '<div style="display:grid;grid-template-columns:minmax(0,1fr) 34px minmax(0,1fr);align-items:center;gap:7px">' +
+          '<div style="font-size:' + (main ? '17' : '14') + 'px;font-weight:800;line-height:1.25;overflow-wrap:anywhere">' + one + '</div>' +
+          '<div style="text-align:center;color:#ffce22;font-size:13px;font-weight:900">VS</div>' +
+          '<div style="text-align:right;font-size:' + (main ? '17' : '14') + 'px;font-weight:800;line-height:1.25;overflow-wrap:anywhere">' + two + '</div></div></div>';
+      }).join('');
+      return header + '<div style="display:grid;gap:9px">' + cards + '</div>' +
+        (eventUrl ? '<div style="font-size:11px;color:#aaa;text-align:left;margin-top:14px">Quelle: ' + esc(eventUrl) + '</div>' : '');
+    ]]]
