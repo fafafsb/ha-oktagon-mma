@@ -107,16 +107,22 @@ Event information and fight cards are obtained from public OKTAGON MMA pages. Ev
 
 Found a bug or have an idea? [Open an issue](https://github.com/fafafsb/ha-oktagon-mma/issues). Please include your Home Assistant version, integration version and relevant logs where possible.
 
-## ☕ Support the project
-
-Enjoying OKTAGON MMA for Home Assistant? If you'd like to support continued development, you can [buy the developer a coffee on Ko-fi](https://ko-fi.com/fafafsb). ❤️
-
-Supporting is completely optional. The integration remains free and open source.
-
 ## ⚠️ Disclaimer
 
 **Unofficial fan-made community integration.** This project is not affiliated with, sponsored by, endorsed by or officially connected to OKTAGON MMA. OKTAGON MMA trademarks, logos and fighter images belong to their respective owners.
 
 ---
 
-<div align="center">Made for MMA fans who love Home Assistant. 🥊</div>
+<div align="center">
+
+Made for MMA fans who love Home Assistant. 🥊
+
+### ☕ Support the project
+
+Enjoying this integration? Support its development with an optional coffee. ❤️
+
+<a href="https://ko-fi.com/fafafsb"><img src="https://img.shields.io/badge/%E2%98%95_Buy_me_a_coffee-Support_on_Ko--fi-FF5E5B?style=for-the-badge" alt="Support on Ko-fi"></a>
+
+<sub>Completely optional — OKTAGON MMA for Home Assistant remains free and open source.</sub>
+
+</div>
