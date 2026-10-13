@@ -13,6 +13,8 @@ class Bout:
     fighter_one: str
     fighter_two: str
     weight_class: str | None = None
+    fighter_one_image: str | None = None
+    fighter_two_image: str | None = None
 
 
 class _JsonLd(HTMLParser):
@@ -158,7 +160,7 @@ def parse_visible_fight_card(html: str) -> list[Bout]:
             None,
         )
         seen.add((first, second))
-        bouts.append(Bout(first, second, weight))
+        bouts.append(Bout(first, second, weight, fighter_image(left), fighter_image(right)))
     return bouts
 
 
@@ -225,6 +227,26 @@ def parse_embedded_fight_card(html: str) -> list[Bout]:
         return []
     bouts = []
     seen = set()
+
+    def fighter_image(fighter):
+        """Prefer official fight-card art, falling back to a profile portrait."""
+        from urllib.parse import urlparse
+
+        for field in ("imageFightCard", "imageProfile"):
+            image = fighter.get(field)
+            if not isinstance(image, dict):
+                continue
+            urls = image.get("url")
+            if not isinstance(urls, dict):
+                continue
+            for key in ("en", "cs", "de", "pl"):
+                url = urls.get(key)
+                if not isinstance(url, str):
+                    continue
+                parsed = urlparse(url)
+                if parsed.scheme == "https" and parsed.hostname == "assets.oktagonmma.com":
+                    return url
+        return None
 
     def visit(value):
         if isinstance(value, dict):
