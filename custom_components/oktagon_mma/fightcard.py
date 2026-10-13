@@ -87,3 +87,76 @@ def parse_fight_card(html: str) -> list[Bout]:
                 seen.add(key)
                 bouts.append(Bout(*names))
     return bouts
+
+
+class _VisibleText(HTMLParser):
+    """Flatten rendered text while skipping scripts and styles."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.parts = []
+        self.hidden = 0
+
+    def handle_starttag(self, tag, attrs):
+        if tag in ("script", "style"):
+            self.hidden += 1
+        elif tag in ("h1", "h2", "h3", "h4", "h5", "p", "div", "section", "br", "li"):
+            self.parts.append("\\n")
+
+    def handle_endtag(self, tag):
+        if tag in ("script", "style"):
+            self.hidden = max(0, self.hidden - 1)
+        elif tag in ("h1", "h2", "h3", "h4", "h5", "p", "div", "section", "li"):
+            self.parts.append("\\n")
+
+    def handle_data(self, data):
+        if not self.hidden:
+            self.parts.append(data)
+
+
+def parse_visible_fight_card(html: str) -> list[Bout]:
+    """Parse a clearly labelled main-card section of an OKTAGON event page.
+
+    The official page renders pairs as 'Name / VS / Name'. Never guess a
+    missing opponent or derive a card from promotional headlines.
+    """
+    import re
+
+    parser = _VisibleText()
+    parser.feed(html)
+    lines = [re.sub(r"\\s+", " ", line).strip() for line in "".join(parser.parts).splitlines()]
+    lines = [line for line in lines if line]
+    try:
+        start = next(i for i, value in enumerate(lines) if value.upper() == "MAIN CARD")
+    except StopIteration:
+        return []
+    section = lines[start + 1:]
+    for i, value in enumerate(section):
+        if value.upper() in ("PRELIMS", "PRELIMINARY CARD", "NEWS", "EVENT DETAIL"):
+            section = section[:i]
+            break
+    weights = {
+        "middleweight", "light heavyweight", "flyweight", "featherweight",
+        "lightweight", "welterweight", "heavyweight", "bantamweight",
+        "strawweight", "catchweight",
+    }
+    bouts = []
+    seen = set()
+    for i, line in enumerate(section):
+        if line.upper() != "VS" or i == 0 or i + 1 >= len(section):
+            continue
+        first, second = section[i - 1], section[i + 1]
+        if any(not name or name.upper() == "TBA" or len(name) > 80 for name in (first, second)):
+            continue
+        if not all(re.search(r"[A-Za-zÀ-ž]", name) for name in (first, second)):
+            continue
+        if first == second or (first, second) in seen:
+            continue
+        weight = next(
+            (value for value in reversed(section[max(0, i - 7):i - 1])
+             if value.lower() in weights),
+            None,
+        )
+        seen.add((first, second))
+        bouts.append(Bout(first, second, weight))
+    return bouts
