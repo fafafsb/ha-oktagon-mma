@@ -168,11 +168,11 @@ def find_event_page_url(html: str, event_title: str) -> str | None:
     from html import unescape
     from urllib.parse import urljoin, urlparse
 
-    match = re.match(r"^OKTAGON ([0-9]+)\\b", event_title, re.I)
+    match = re.match(r"^OKTAGON ([0-9]+)\b", event_title, re.I)
     if not match:
         return None
     number = match.group(1)
-    for href in re.findall(r"""href\\s*=\\s*["']([^"']+)["']""", html, re.I):
+    for href in re.findall(r"""href\s*=\s*["']([^"']+)["']""", html, re.I):
         url = urljoin("https://oktagonmma.com/", unescape(href))
         parsed = urlparse(url)
         pattern = rf"^/(?:en/)?events/oktagon-{number}(?:-|/)"
