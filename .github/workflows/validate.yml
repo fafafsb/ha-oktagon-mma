@@ -195,3 +195,38 @@ jobs:
               print("Fight weight-related fields:", {k: str(v)[:500] for k,v in fight.items() if any(s in k.lower() for s in ("weight", "category", "division", "class", "limit"))})
           print("Card section fields:", [(k, str(v)[:200]) for k,v in payload["props"]["pageProps"].items() if "fight" in k.lower()])
           PY
+
+      - name: Inspect official fighter portrait metadata
+        run: |
+          python - <<'PY'
+          import json, urllib.request, sys
+          from pathlib import Path
+          sys.path.insert(0, str(Path("custom_components/oktagon_mma").resolve()))
+          from fightcard import _NextData
+          request = urllib.request.Request("https://oktagonmma.com/de/events/oktagon-95-karlovy-vary/", headers={"User-Agent":"Mozilla/5.0"})
+          with urllib.request.urlopen(request, timeout=25) as response:
+              html = response.read().decode("utf-8", errors="replace")
+          parser = _NextData()
+          parser.feed(html)
+          payload = json.loads("".join(parser.parts))
+          found = []
+          def walk(value):
+              if isinstance(value, dict):
+                  fights = value.get("fights")
+                  if isinstance(fights, list):
+                      found.extend(f for f in fights if isinstance(f, dict) and isinstance(f.get("fighter1"), dict))
+                  for child in value.values():
+                      walk(child)
+              elif isinstance(value, list):
+                  for child in value:
+                      walk(child)
+          walk(payload.get("props", {}).get("pageProps", {}))
+          for fight in found[:2]:
+              for side in ("fighter1", "fighter2"):
+                  fighter = fight.get(side, {})
+                  print("FIGHTER", fighter.get("firstName"), fighter.get("lastName"))
+                  print("FIGHTER KEYS", list(fighter.keys()))
+                  for key, value in fighter.items():
+                      if any(word in key.lower() for word in ("image", "photo", "picture", "avatar", "portrait", "media", "thumbnail")):
+                          print("PORTRAIT FIELD", key, repr(value)[:1000])
+          PY
