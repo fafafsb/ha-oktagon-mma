@@ -71,8 +71,8 @@ class CountdownSensor(OktagonSensor):
             )
         )
 
-    def _handle_midnight(self, now):
-        """Refresh the displayed number of days at midnight."""
+    async def _handle_midnight(self, now):
+        """Refresh the countdown on the Home Assistant event loop."""
         self.async_write_ha_state()
 
     def __init__(self, coordinator, entry):
