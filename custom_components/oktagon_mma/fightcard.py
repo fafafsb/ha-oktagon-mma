@@ -210,7 +210,7 @@ def find_event_page_url(html: str, event_title: str) -> str | None:
 
     # Official event slugs can be present only in embedded Next.js JSON.
     slug_pattern = re.compile(
-        rf"(?<![a-z0-9])({re.escape(slug_prefix)}(?:-[a-z0-9]+)*)",
+        rf"(?<![a-z0-9])({re.escape(slug_prefix)}(?![0-9])(?:-[a-z0-9]+)*)",
         re.I,
     )
     for match in slug_pattern.finditer(html):
