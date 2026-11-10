@@ -175,8 +175,8 @@ def find_event_page_url(html: str, event_title: str) -> str | None:
     from urllib.parse import urljoin, urlparse
 
     title = event_title.strip()
-    oktagon = re.match(r"^OKTAGON ([0-9]+)\\b", title, re.I)
-    tipsport = re.match(r"^TIPSPORT CAGE GAME\\s+(\\d+)\\b", title, re.I)
+    oktagon = re.match(r"^OKTAGON ([0-9]+)\b", title, re.I)
+    tipsport = re.match(r"^TIPSPORT CAGE GAME\s+(\d+)\b", title, re.I)
     if not oktagon and not tipsport:
         return None
 
@@ -186,7 +186,7 @@ def find_event_page_url(html: str, event_title: str) -> str | None:
         slug_prefix = f"tipsport-cage-game-{tipsport.group(1)}"
 
     # Search both ordinary links and slugs embedded in Next.js overview data.
-    links = re.findall(r"""href\\s*=\\s*["']([^"']+)["']""", html, re.I)
+    links = re.findall(r"""href\s*=\s*["']([^"']+)["']""", html, re.I)
     candidates = []
     for href in links:
         url = urljoin("https://oktagonmma.com/", unescape(href))
