@@ -186,11 +186,6 @@ def find_event_page_url(html: str, event_title: str) -> str | None:
         slug_prefix = f"tipsport-cage-game-{tipsport.group(1)}"
 
     # Search both ordinary links and slugs embedded in Next.js overview data.
-    # Require the exact event number boundary to avoid matching e.g. 2 with 20.
-    pattern = re.compile(
-        rf"(?<![a-z0-9]){re.escape(slug_prefix)}(?=-|/|[\\\"'\\\\]|$)",
-        re.I,
-    )
     links = re.findall(r"""href\\s*=\\s*["']([^"']+)["']""", html, re.I)
     candidates = []
     for href in links:
