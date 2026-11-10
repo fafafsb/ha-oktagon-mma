@@ -206,7 +206,7 @@ def find_event_page_url(html: str, event_title: str) -> str | None:
     # Only inspect explicit slug values in embedded JSON, never arbitrary
     # strings from untrusted links or other unrelated HTML content.
     slug_pattern = re.compile(
-        rf'"slug"\\s*:\\s*"({re.escape(slug_prefix)}(?![0-9])(?:-[a-z0-9]+)*)"',
+        rf'"slug"\s*:\s*"({re.escape(slug_prefix)}(?![0-9])(?:-[a-z0-9]+)*)"',
         re.I,
     )
     for match in slug_pattern.finditer(html):
