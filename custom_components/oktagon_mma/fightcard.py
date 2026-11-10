@@ -174,10 +174,18 @@ def find_event_page_url(html: str, event_title: str) -> str | None:
     from html import unescape
     from urllib.parse import urljoin, urlparse
 
-    match = re.match(r"^OKTAGON ([0-9]+)\b", event_title, re.I)
-    if not match:
+    title = event_title.strip()
+    oktagon = re.match(r"^OKTAGON ([0-9]+)\b", title, re.I)
+    tipsport = re.match(r"^TIPSPORT CAGE GAME\s+(\d+)\b", title, re.I)
+    if not oktagon and not tipsport:
         return None
-    number = match.group(1)
+
+    if oktagon:
+        slug_prefix = f"oktagon-{oktagon.group(1)}"
+    else:
+        slug_prefix = f"tipsport-cage-game-{tipsport.group(1)}"
+
+    # Search both ordinary links and slugs embedded in Next.js overview data.
     links = re.findall(r"""href\s*=\s*["']([^"']+)["']""", html, re.I)
     candidates = []
     for href in links:
@@ -186,13 +194,26 @@ def find_event_page_url(html: str, event_title: str) -> str | None:
         if parsed.scheme != "https":
             continue
         if parsed.hostname in ("oktagonmma.com", "www.oktagonmma.com"):
-            if re.search(rf"/(?:en/|de/|cs/|pl/)?events/oktagon-{number}(?:-|/|$)", parsed.path, re.I):
+            if re.search(
+                rf"^/(?:en/|de/|cs/|pl/)?events/{re.escape(slug_prefix)}(?:-|/|$)",
+                parsed.path, re.I,
+            ):
                 candidates.append((0, url))
-        elif parsed.hostname == "oktagon.tv":
-            if re.fullmatch(rf"/event/oktagon-{number}/?", parsed.path, re.I):
-                candidates.append((1, url))
-    return min(candidates)[1] if candidates else None
+        elif oktagon and parsed.hostname == "oktagon.tv":
+            if re.fullmatch(rf"/event/oktagon-{oktagon.group(1)}/?", parsed.path, re.I):
+                candidates.append((2, url))
 
+    # Only inspect explicit slug values in embedded JSON, never arbitrary
+    # strings from untrusted links or other unrelated HTML content.
+    slug_pattern = re.compile(
+        rf'"slug"\s*:\s*"({re.escape(slug_prefix)}(?![0-9])(?:-[a-z0-9]+)*)"',
+        re.I,
+    )
+    for match in slug_pattern.finditer(html):
+        slug = match.group(1)
+        candidates.append((1, f"https://oktagonmma.com/de/events/{slug}/"))
+
+    return min(candidates)[1] if candidates else None
 
 class _NextData(HTMLParser):
     """Read Next.js server-side JSON without executing scripts."""

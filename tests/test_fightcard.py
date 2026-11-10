@@ -101,3 +101,22 @@ def test_embedded_portrait_rejects_external_image_host():
     bout = parse_embedded_fight_card(html)[0]
     assert bout.fighter_one_image is None
     assert bout.fighter_two_image is None
+
+
+def test_tipsport_event_link_from_overview():
+    html = '<a href="/de/events/tipsport-cage-game-2/">Fightcard</a>'
+    assert find_event_page_url(html, "TIPSPORT CAGE GAME 2") == (
+        "https://oktagonmma.com/de/events/tipsport-cage-game-2/"
+    )
+
+
+def test_tipsport_slug_from_embedded_data():
+    html = '{"slug":"tipsport-cage-game-2"}'
+    assert find_event_page_url(html, "TIPSPORT CAGE GAME 2") == (
+        "https://oktagonmma.com/de/events/tipsport-cage-game-2/"
+    )
+
+
+def test_tipsport_does_not_match_other_number():
+    html = '<a href="/de/events/tipsport-cage-game-20/">Other</a>'
+    assert find_event_page_url(html, "TIPSPORT CAGE GAME 2") is None
