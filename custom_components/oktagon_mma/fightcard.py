@@ -203,13 +203,14 @@ def find_event_page_url(html: str, event_title: str) -> str | None:
             if re.fullmatch(rf"/event/oktagon-{oktagon.group(1)}/?", parsed.path, re.I):
                 candidates.append((2, url))
 
-    # Official event slugs can be present only in embedded Next.js JSON.
+    # Only inspect explicit slug values in embedded JSON, never arbitrary
+    # strings from untrusted links or other unrelated HTML content.
     slug_pattern = re.compile(
-        rf"(?<![a-z0-9])({re.escape(slug_prefix)}(?![0-9])(?:-[a-z0-9]+)*)",
+        rf'["\\']slug["\\']\\s*:\\s*["\\']({re.escape(slug_prefix)}(?![0-9])(?:-[a-z0-9]+)*)["\\']',
         re.I,
     )
     for match in slug_pattern.finditer(html):
-        slug = match.group(1).rstrip("-")
+        slug = match.group(1)
         candidates.append((1, f"https://oktagonmma.com/de/events/{slug}/"))
 
     return min(candidates)[1] if candidates else None
