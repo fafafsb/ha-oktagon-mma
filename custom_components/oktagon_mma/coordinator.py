@@ -43,15 +43,6 @@ class OktagonCoordinator(DataUpdateCoordinator[list[OktagonEvent]]):
         # never take down the existing calendar or event sensors.
         self.fight_card = []
         self.fight_card_url = find_event_page_url(html, events[0].title)
-        if events[0].title.upper().startswith('OKTAGON '):
-            import re
-            match = re.match(r'^OKTAGON ([0-9]+)\b', events[0].title, re.I)
-            if match:
-                number = match.group(1)
-                # The overview contains the official slug as part of its Next.js data.
-                slug_match = re.search(r'(?<![a-z0-9])oktagon-' + number + r'-[a-z0-9-]+', html, re.I)
-                if slug_match:
-                    self.fight_card_url = 'https://oktagonmma.com/de/events/' + slug_match.group(0) + '/'
         if self.fight_card_url:
             try:
                 async with session.get(self.fight_card_url, timeout=20) as detail_response:
